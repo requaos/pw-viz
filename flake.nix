@@ -15,6 +15,25 @@
     nci.lib.makeOutputs {
       root = ./.;
       overrides = {
+        common = prev:
+          {
+            env = prev.env // {
+              LIBCLANG_PATH = prev.pkgs.lib.makeLibraryPath ([ prev.pkgs.libclang.lib ]);
+            };
+            buildInputs = (prev.buildInputs or [ ]) ++ [
+              prev.pkgs.libGL
+              prev.pkgs.xorg.libX11
+              prev.pkgs.xorg.libXcursor
+              prev.pkgs.xorg.libXrandr
+              prev.pkgs.xorg.libXi
+              prev.pkgs.xorg.libxcb
+              prev.pkgs.pipewire
+            ];
+            nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ [
+              (prev.pkgs.hiPrio prev.pkgs.clang) # needs priority in nix develop shell
+              prev.pkgs.pkg-config
+            ];
+          };
         packageMetadata = prev: {
           runtimeLibs = (prev.runtimeLibs or [ ]) ++ [
             "libGL"
@@ -22,39 +41,6 @@
             "pkgs.pipewire"
           ];
         };
-        crateOverrides = common: prev:
-          let
-            libclang_path = common.pkgs.lib.makeLibraryPath ([ common.pkgs.libclang.lib ]);
-            nbi = [
-              (common.pkgs.hiPrio common.pkgs.clang) # needs priority in nix develop shell
-              common.pkgs.pkg-config
-            ];
-            bi = [
-              common.pkgs.libGL
-              common.pkgs.xorg.libX11
-              common.pkgs.xorg.libXcursor
-              common.pkgs.xorg.libXrandr
-              common.pkgs.xorg.libXi
-              common.pkgs.xorg.libxcb
-              common.pkgs.pipewire
-              common.pkgs.libclang # needed in nix develop shell
-            ];
-          in
-          {
-            libspa-sys = prev: {
-              LIBCLANG_PATH = libclang_path;
-              # buildInputs = (prev.buildInputs or [ ]) ++ [
-              #   common.pkgs.pipewire
-              # ];
-              buildInputs = (prev.buildInputs or [ ]) ++ bi;
-              nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ nbi;
-            };
-            pw-viz = prev: {
-              LIBCLANG_PATH = libclang_path;
-              buildInputs = (prev.buildInputs or [ ]) ++ bi;
-              nativeBuildInputs = (prev.nativeBuildInputs or [ ]) ++ nbi;
-            };
-          };
       };
     };
 }
