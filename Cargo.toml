@@ -2,7 +2,7 @@
 name = "pw-viz"
 description = "A simple and elegant, pipewire graph editor"
 authors = ["Atri Sarkar <atrisarkar91@gmail.com>"]
-version = "0.1.0"
+version = "0.2.0"
 keywords = ["pipewire", "graph", "editor", "audio", "patchbay"]
 categories = ["multimedia::audio", "visualization", "gui"]
 
@@ -12,6 +12,7 @@ license = "GPL-3.0-only"
 
 edition = "2021"
 
+
 [dependencies]
 pipewire = "0.5"
 rand = "0.8"
@@ -20,10 +21,11 @@ simple_logger = "4"
 natord = "1"
 
 # egui stuff
-eframe = { version = "0.19", features = ["persistence"] }
-egui = "0.19"
-egui_nodes = {git = "https://github.com/Ax9D/egui_nodes", rev="91ea9b0"}
+eframe = { version = "0.20", features = ["persistence"] }
+egui = "0.20"
+egui_nodes = {git = "https://github.com/Ax9D/egui_nodes", rev="27167e4"}
 serde = { version = "1", features = ["derive"] }
 
 [profile.release]
 lto = true
+strip = true
