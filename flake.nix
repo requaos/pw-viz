@@ -26,41 +26,24 @@
         nci.crates.${crateName} = {
           drvConfig = {
             mkDerivation = {
-              overrides = {
-                common = prev: {
-                  env =
-                    prev.env
-                    // {
-                      LIBCLANG_PATH = prev.pkgs.lib.makeLibraryPath [prev.pkgs.libclang.lib];
-                    };
-                  buildInputs =
-                    (prev.buildInputs or [])
-                    ++ [
-                      prev.pkgs.libGL
-                      prev.pkgs.xorg.libX11
-                      prev.pkgs.xorg.libXcursor
-                      prev.pkgs.xorg.libXrandr
-                      prev.pkgs.xorg.libXi
-                      prev.pkgs.xorg.libxcb
-                      prev.pkgs.pipewire
-                    ];
-                  nativeBuildInputs =
-                    (prev.nativeBuildInputs or [])
-                    ++ [
-                      (prev.pkgs.hiPrio prev.pkgs.clang) # needs priority in nix develop shell
-                      prev.pkgs.pkg-config
-                    ];
-                };
-                packageMetadata = prev: {
-                  runtimeLibs =
-                    (prev.runtimeLibs or [])
-                    ++ [
-                      "libGL"
-                      "xorg.libxcb"
-                      "pkgs.pipewire"
-                    ];
-                };
-              };
+              buildInputs = [
+                pkgs.libGL
+                pkgs.xorg.libX11
+                pkgs.xorg.libXcursor
+                pkgs.xorg.libXrandr
+                pkgs.xorg.libXi
+                pkgs.xorg.libxcb
+                pkgs.pipewire
+              ];
+
+              shellHook = ''
+                export LIBCLANG_PATH=${pkgs.lib.makeLibraryPath [pkgs.libclang.lib]}
+              '';
+
+              nativeBuildInputs = [
+                (pkgs.hiPrio pkgs.clang) # needs priority in nix develop shell
+                pkgs.pkg-config
+              ];
             };
           };
         };
