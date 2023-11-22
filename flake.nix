@@ -1,52 +1,45 @@
 {
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-  inputs.nci.url = "github:yusdacra/nix-cargo-integration";
-  inputs.nci.inputs.nixpkgs.follows = "nixpkgs";
-  inputs.parts.url = "github:hercules-ci/flake-parts";
-  inputs.parts.inputs.nixpkgs-lib.follows = "nixpkgs";
+  inputs = {
+    cargo2nix.url = "github:cargo2nix/cargo2nix/release-0.11.0";
+    flake-utils.follows = "cargo2nix/flake-utils";
+    nixpkgs.follows = "cargo2nix/nixpkgs";
+  };
 
-  outputs = inputs @ {
-    parts,
-    nci,
-    ...
-  }:
-    parts.lib.mkFlake {inherit inputs;} {
-      systems = ["x86_64-linux"];
-      imports = [nci.flakeModule];
-      perSystem = {
-        pkgs,
-        config,
-        ...
-      }: let
-        crateName = "pw-viz";
-      in {
-        # declare projects
-        nci.projects.${crateName}.path = ./.;
-        # configure crates
-        nci.crates.${crateName} = {
-          drvConfig = {
-            mkDerivation = {
-              buildInputs = [
-                pkgs.libGL
-                pkgs.xorg.libX11
-                pkgs.xorg.libXcursor
-                pkgs.xorg.libXrandr
-                pkgs.xorg.libXi
-                pkgs.xorg.libxcb
-                pkgs.pipewire
-              ];
-
-              shellHook = ''
-                export LIBCLANG_PATH=${pkgs.lib.makeLibraryPath [pkgs.libclang.lib]}
-              '';
-
-              nativeBuildInputs = [
-                (pkgs.hiPrio pkgs.clang) # needs priority in nix develop shell
-                pkgs.pkg-config
-              ];
-            };
+  outputs = inputs:
+    with inputs;
+      flake-utils.lib.eachDefaultSystem (
+        system: let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [cargo2nix.overlays.default];
           };
-        };
-      };
-    };
+
+          rustPkgs = pkgs.rustBuilder.makePackageSet {
+            rustVersion = "1.71.0";
+            packageFun = import ./Cargo.nix;
+
+            # Provide the gperfools lib for linking the final rust-analyzer binary
+            packageOverrides = pkgs:
+              pkgs.rustBuilder.overrides.all
+              ++ [
+                (pkgs.rustBuilder.rustLib.makeOverride {
+                  name = "pw-viz";
+                  overrideAttrs = drv: {
+                    propagatedNativeBuildInputs =
+                      drv.propagatedNativeBuildInputs
+                      or []
+                      ++ [
+                        pkgs.pkg-config
+                      ];
+                  };
+                })
+              ];
+          };
+        in rec {
+          packages = {
+            pw-viz = rustPkgs.workspace.pw-viz {};
+            default = packages.pw-viz;
+          };
+        }
+      );
 }

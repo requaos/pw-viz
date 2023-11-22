@@ -29,7 +29,3 @@ serde = { version = "1", features = ["derive"] }
 [profile.release]
 lto = true
 strip = true
-
-# minimal for nix-cargo-integration
-[package.metadata.nix]
-build = true
