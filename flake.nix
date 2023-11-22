@@ -25,7 +25,7 @@
         # configure crates
         nci.crates.${crateName} = {
           drvConfig = {
-            mkDerivation = {
+            mkDerivation = rec {
               buildInputs = [
                 pkgs.libGL
                 pkgs.xorg.libX11
@@ -38,6 +38,7 @@
 
               shellHook = ''
                 export LIBCLANG_PATH=${pkgs.lib.makeLibraryPath [pkgs.libclang.lib]}
+                export PKG_CONFIG_PATH=${pkgs.lib.makeSearchPath "lib/pkgconfig" buildInputs}
               '';
 
               nativeBuildInputs = [
